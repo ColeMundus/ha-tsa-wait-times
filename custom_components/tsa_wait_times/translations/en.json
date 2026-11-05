@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect airport wait times",
+        "description": "Read public airport estimates. Only Portland (PDX) is supported.",
+        "data": {
+          "airport": "Airport",
+          "scan_interval": "Polling interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to read the airport feed. Wait at least one minute before retrying.",
+      "invalid_input": "Select PDX and a whole-minute polling interval from 1 to 1440."
+    },
+    "abort": {
+      "already_configured": "PDX is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling options",
+        "data": {
+          "scan_interval": "Polling interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_input": "Use a whole-minute polling interval from 1 to 1440."
+    }
+  }
+}
