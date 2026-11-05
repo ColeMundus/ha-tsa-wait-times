@@ -1,6 +1,6 @@
 # TSA Wait Times for Home Assistant
 
-<img src="https://raw.githubusercontent.com/ColeMundus/ha-tsa-wait-times/main/custom_components/tsa_wait_times/brand/icon.png" alt="Official TSA seal; unofficial integration" width="96" height="96">
+<img src="custom_components/tsa_wait_times/brand/icon.png" alt="Official TSA seal; unofficial integration" width="96" height="96">
 
 [![CI workflow](https://img.shields.io/static/v1?label=CI&message=workflow&color=555)](https://github.com/ColeMundus/ha-tsa-wait-times/actions/workflows/ci.yml)
 [![HA tested 2026.10.0](https://img.shields.io/badge/HA-tested%202026.10.0-41BDF5)](https://github.com/ColeMundus/ha-tsa-wait-times/blob/main/pyproject.toml)
@@ -96,9 +96,9 @@ see [LICENSE](LICENSE) for provenance and the separate artwork notice. Governmen
 copyright status does not grant trademark/insignia permission; that permission remains
 unverified. No endorsement is implied. Public distribution still requires applicable
 branding permission, independent review, public HACS validation and installed testing.
-The README icon's absolute raw URL is not publicly accessible while this repository is
-private; this does not affect the bundled local HA icon. CI links to the workflow, not
-a claimed passing result. Local checks do not prove HACS catalog acceptance or live operation.
+The README uses a repository-relative icon so GitHub can authenticate access while
+the repository is private. CI links to the workflow, not a claimed passing result.
+Local checks do not prove HACS catalog acceptance.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md) and
 [SECURITY.md](SECURITY.md).
