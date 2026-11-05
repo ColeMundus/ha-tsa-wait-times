@@ -19,3 +19,18 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Third-party artwork (not covered by the MIT License above)
+-------------------------------------------------------
+brand/icon.png is the official Transportation Security Administration seal from:
+https://www.tsa.gov/profiles/tsad8_gov/themes/custom/tsa_uswds/logo.svg
+Linked by https://www.tsa.gov/; retrieved 2026-11-05. The square SVG was
+rasterized and downsampled to 256x256 PNG without altering the design.
+Source SVG SHA-256: 4b37098028aac5f9e57db0103a09f75d182ed125d92bc4d75ae78a34be3664d2
+
+U.S. federal government works are generally public domain in the United States
+(17 USC 105); this does not grant trademark or official-insignia rights.
+TSA/DHS names and marks remain their owners' property. No endorsement is implied.
+DHS requires permission for use of its marks; permission for this use has not
+been established. Resolve applicable permission before public distribution:
+https://www.dhs.gov/department-homeland-security-intellectual-property-policy

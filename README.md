@@ -1,5 +1,12 @@
 # TSA Wait Times for Home Assistant
 
+<img src="https://raw.githubusercontent.com/ColeMundus/ha-tsa-wait-times/main/custom_components/tsa_wait_times/brand/icon.png" alt="Official TSA seal; unofficial integration" width="96" height="96">
+
+[![CI workflow](https://img.shields.io/static/v1?label=CI&message=workflow&color=555)](https://github.com/ColeMundus/ha-tsa-wait-times/actions/workflows/ci.yml)
+[![HA tested 2026.10.0](https://img.shields.io/badge/HA-tested%202026.10.0-41BDF5)](https://github.com/ColeMundus/ha-tsa-wait-times/blob/main/pyproject.toml)
+[![Code license MIT](https://img.shields.io/badge/code%20license-MIT-blue?style=flat)](LICENSE)
+[![HACS private preview, not listed](https://img.shields.io/badge/HACS-private_preview-orange)](#installation)
+
 Read Portland International Airport (PDX) security wait estimates without an account.
 This is an unofficial, read-only custom integration, not a TSA or Port of Portland product.
 **PDX is the only supported airport.** No nationwide coverage, AUS support, travel-time
@@ -83,11 +90,15 @@ source no longer supplies a numeric estimate. Remove the integration through Dev
 
 ## Distribution status
 
-Code is MIT licensed; airport and TSA names/trademarks remain their owners' property.
-No official artwork is bundled: branding provenance/redistribution rights are unresolved.
-Public release is gated on branding review, independent review, public HACS validation
-and installed testing. No endorsement is implied. Local automated checks do not prove
-HACS catalog acceptance or operation on a production HA instance.
+Code is MIT licensed. The bundled 256px icon preserves the official TSA seal from
+[TSA's website](https://www.tsa.gov/profiles/tsad8_gov/themes/custom/tsa_uswds/logo.svg);
+see [LICENSE](LICENSE) for provenance and the separate artwork notice. Government-work
+copyright status does not grant trademark/insignia permission; that permission remains
+unverified. No endorsement is implied. Public distribution still requires applicable
+branding permission, independent review, public HACS validation and installed testing.
+The README icon's absolute raw URL is not publicly accessible while this repository is
+private; this does not affect the bundled local HA icon. CI links to the workflow, not
+a claimed passing result. Local checks do not prove HACS catalog acceptance or live operation.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md) and
 [SECURITY.md](SECURITY.md).

@@ -6,11 +6,15 @@ import hashlib
 import json
 import re
 import zipfile
+from io import BytesIO
 from pathlib import Path
+
+from PIL import Image
 
 REQUIRED = {
     "__init__.py",
     "binary_sensor.py",
+    "brand/icon.png",
     "client.py",
     "config_flow.py",
     "const.py",
@@ -44,6 +48,14 @@ def build(root: Path, output: Path) -> Path:
             ast.parse(raw, filename=target)
         elif source.suffix == ".json":
             json.loads(raw)
+        elif source.suffix == ".png":
+            try:
+                with Image.open(BytesIO(raw)) as image:
+                    if image.format != "PNG" or image.size != (256, 256):
+                        raise ValueError("Brand icon must be a 256x256 PNG")
+                    image.verify()
+            except OSError as err:
+                raise ValueError("Invalid brand icon") from err
         contents[target] = raw
     manifest = json.loads(contents["custom_components/tsa_wait_times/manifest.json"])
     version = manifest["version"]
