@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1b0 — Unreleased
+
+- Add native terminal/checkpoint-open binary sensors, including later discoveries.
+- Preserve airport wait/PreCheck identities and checkpoint attributes; share polling.
+- Keep missing/unknown checkpoints unavailable and preserve registry customizations.
+- Cover checkpoint identity, reload/unload, discovery and recovery with native HA tests.
+
 ## 0.2.0b0 — Unreleased
 
 - Replace the PDX-only provider with anonymous TSAWaitTimes.com HTML.

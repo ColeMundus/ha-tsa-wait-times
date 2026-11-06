@@ -188,7 +188,7 @@ async def test_flow_lifecycle(hass, http, payload, seeded):
         len(
             [s for s in hass.states.async_all() if "tsa_wait_times_pdx_" in s.entity_id]
         )
-        == 2
+        == 4
     )
     registry = er.async_get(hass)
     uid = registry.async_get(state.entity_id).unique_id
