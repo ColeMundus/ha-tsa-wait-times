@@ -1,11 +1,11 @@
 # TSA Wait Times for Home Assistant
 
-<img src="custom_components/tsa_wait_times/brand/icon.png" alt="TSA seal; unofficial integration" width="96" height="96">
+<img src="https://raw.githubusercontent.com/ColeMundus/ha-tsa-wait-times/main/custom_components/tsa_wait_times/brand/icon.png" alt="TSA seal; unofficial integration" width="96" height="96">
 
 [![CI: workflow](docs/badges/ci.svg)](https://github.com/ColeMundus/ha-tsa-wait-times/actions/workflows/ci.yml)
 [![HA tested: 2026.10.0](docs/badges/compatibility.svg)](https://github.com/ColeMundus/ha-tsa-wait-times/actions/workflows/ci.yml)
 [![License: MIT](docs/badges/license.svg)](LICENSE)
-[![Distribution: private preview](docs/badges/distribution.svg)](#installation)
+[![Distribution: custom repository](docs/badges/distribution.svg)](#installation)
 
 Airport security wait estimates and checkpoint status from
 [TSAWaitTimes.com](https://www.tsawaittimes.com/), with no account or API key.
@@ -14,15 +14,17 @@ and monitor multiple airports. This integration is independent of TSA and TayTec
 
 ## Installation
 
-Requires **Home Assistant 2026.10.0+**. The repository is currently private and has
-no published release; it is not listed in HACS.
+Requires **Home Assistant 2026.10.0+**. Available as a HACS custom repository;
+not yet included in HACS's default catalog. No GitHub release has been published yet.
 
-For a manual preview, build with `uv run --locked python scripts/package.py`, then
-extract `dist/tsa-wait-times-0.2.2b0.zip` into your HA configuration directory and
-restart HA. The installed path must be `custom_components/tsa_wait_times/manifest.json`.
+1. In HACS, open **Custom repositories** and add
+   `https://github.com/ColeMundus/ha-tsa-wait-times` with category **Integration**.
+2. Download **TSA Wait Times** from the default branch, then restart Home Assistant.
+3. Continue with setup below.
 
-Once publicly available, add this repository to HACS as a custom **Integration**:
-`https://github.com/ColeMundus/ha-tsa-wait-times`.
+For manual installation, build with `uv run --locked python scripts/package.py`
+and extract the generated ZIP into your HA configuration directory before restarting.
+The installed path must be `custom_components/tsa_wait_times/manifest.json`.
 
 ## Setup
 

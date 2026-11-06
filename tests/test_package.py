@@ -102,8 +102,10 @@ def test_readme_branding():
 
     Images().feed(readme)
     assert sources
-    # Private GitHub README images must resolve through authenticated repo paths,
-    # not an unauthenticated raw.githubusercontent.com URL.
-    assert sources == ["custom_components/tsa_wait_times/brand/icon.png"]
-    assert (root / sources[0]).is_file()
+    # Public README HTML must also work inside HACS's embedded renderer.
+    assert sources == [
+        "https://raw.githubusercontent.com/ColeMundus/ha-tsa-wait-times/"
+        "main/custom_components/tsa_wait_times/brand/icon.png"
+    ]
+    assert (root / "custom_components/tsa_wait_times/brand/icon.png").is_file()
     # Badge rendering and link validation live in test_readme_badges.py.
