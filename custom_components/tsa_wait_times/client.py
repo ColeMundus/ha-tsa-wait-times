@@ -201,7 +201,7 @@ def retry_seconds(value: str | None) -> float:
             seconds = (
                 parsedate_to_datetime(value or "") - datetime.now(UTC)
             ).total_seconds()
-        except (ValueError, TypeError, OverflowError):
+        except ValueError, TypeError, OverflowError:
             seconds = 60
     if not math.isfinite(seconds):
         seconds = 3600
@@ -255,7 +255,7 @@ class Feed:
                     if len(body) > 2_000_000:
                         raise FeedError("Provider response too large")
                 return body.decode("utf-8")
-        except (ClientError, TimeoutError, ValueError):
+        except ClientError, TimeoutError, ValueError:
             raise FeedError("Unable to read airport website") from None
 
     async def airports(self) -> dict[str, Airport]:
