@@ -20,6 +20,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+Airport coordinate reference
+----------------------------
+airports.py contains an exact-IATA subset of OurAirports airports.csv:
+https://davidmegginson.github.io/ourairports-data/airports.csv
+Retrieved 2026-11-05; source hash is recorded in airports.py.
+OurAirports releases all data to the Public Domain, without guarantees of
+accuracy or fitness for use: https://ourairports.com/data/
+
 Third-party artwork (not covered by the MIT License above)
 -------------------------------------------------------
 brand/icon.png is the official Transportation Security Administration seal from:

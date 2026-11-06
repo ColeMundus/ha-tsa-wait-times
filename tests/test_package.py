@@ -43,6 +43,9 @@ def test_package(tree, tmp_path):
         assert "https://www.tsa.gov/" in bundle.read("LICENSE").decode()
         assert bundle.testzip() is None
     assert archive.with_suffix(".zip.sha256").exists()
+    with zipfile.ZipFile(archive) as bundle:
+        assert "custom_components/tsa_wait_times/airports.py" in bundle.namelist()
+        assert "OurAirports" in bundle.read("LICENSE").decode()
 
 
 @pytest.mark.parametrize(
@@ -53,6 +56,7 @@ def test_package(tree, tmp_path):
         "version",
         "syntax",
         "icon_missing",
+        "coordinates_missing",
         "icon_invalid",
         "icon_size",
     ],
@@ -68,6 +72,8 @@ def test_reject(tree, tmp_path, damage):
         manifest = json.loads((component / "manifest.json").read_text())
         manifest["version"] = "../../unsafe"
         (component / "manifest.json").write_text(json.dumps(manifest))
+    elif damage == "coordinates_missing":
+        (component / "airports.py").unlink()
     elif damage == "icon_missing":
         (component / "brand/icon.png").unlink()
     elif damage == "icon_invalid":

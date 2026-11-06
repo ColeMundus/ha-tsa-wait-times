@@ -8,6 +8,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from . import get_feed
+from .airports import nearest_airport
 from .client import Airport, FeedError
 from .const import (
     CONF_AIRPORT,
@@ -38,10 +39,19 @@ class MinuteSelector(selector.NumberSelector):
         return interval(data)
 
 
-def schema(default: int, airports: dict[str, Airport] | None = None) -> vol.Schema:
+def schema(
+    default: int,
+    airports: dict[str, Airport] | None = None,
+    airport_default: str | None = None,
+) -> vol.Schema:
     fields: dict[Any, Any] = {}
     if airports is not None:
-        fields[vol.Required(CONF_AIRPORT)] = selector.SelectSelector(
+        airport_key = (
+            vol.Required(CONF_AIRPORT, default=airport_default)
+            if airport_default in airports
+            else vol.Required(CONF_AIRPORT)
+        )
+        fields[airport_key] = selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[
                     selector.SelectOptionDict(
@@ -111,9 +121,25 @@ class TSAFlow(ConfigFlow, domain=DOMAIN):
                             CONF_NAME: airport.name,
                         },
                     )
+        configured = {entry.unique_id for entry in self._async_current_entries()}
+        airport_default = (
+            user_input.get(CONF_AIRPORT)
+            if user_input is not None
+            else nearest_airport(
+                self.hass.config.latitude,
+                self.hass.config.longitude,
+                airports.keys() - configured,
+            )
+        )
         return self.async_show_form(
             step_id="user",
-            data_schema=schema(DEFAULT_INTERVAL, airports),
+            data_schema=schema(
+                user_input[CONF_INTERVAL]
+                if user_input is not None and errors.get("base") != "invalid_input"
+                else DEFAULT_INTERVAL,
+                airports,
+                airport_default,
+            ),
             errors=errors,
         )
 

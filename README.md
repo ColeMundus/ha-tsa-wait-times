@@ -19,7 +19,7 @@ website, not the US Transportation Security Administration.
 Requires Home Assistant **2026.10.0 or newer**; tested against 2026.10.0.
 This repository is private with no published release. It is not listed in HACS.
 For an authorized local preview, run `uv run --locked python scripts/package.py` and
-extract `dist/tsa-wait-times-0.2.1b0.zip` into your Home Assistant configuration directory.
+extract `dist/tsa-wait-times-0.2.2b0.zip` into your Home Assistant configuration directory.
 The resulting path must be `custom_components/tsa_wait_times/manifest.json`.
 Restart Home Assistant. Do not copy the development environment or tests.
 
@@ -30,9 +30,12 @@ HACS downloads source; the manual ZIP is not configured as a HACS release asset.
 ## Setup
 
 In **Settings → Devices & services → Add integration**, select **TSA Wait Times**.
-Choose an airport from the searchable directory selector and whole-minute polling
-interval (**5–1440 minutes**, default 5). No credentials, payment, browser extraction,
-or YAML are required. Repeat setup for another airport; duplicate codes are blocked.
+The nearest unconfigured airport with known coordinates is preselected using Home
+Assistant’s configured location, calculated entirely locally. Confirm it or choose
+any airport from the full searchable live directory. If location or reference data
+is unavailable, choose manually; nothing is configured until you submit.
+Set a whole-minute polling interval (**5–1440 minutes**, default 5). No credentials,
+payment, browser extraction, or YAML are required. Repeat setup for another airport; duplicate codes are blocked.
 Use **Configure** on an existing entry to change its interval.
 
 Only linked airport-detail pages in the directory are offered. Autocomplete's larger
@@ -93,8 +96,12 @@ HTTP 429 adds a shared cooldown with bounded `Retry-After` (60–3600 seconds), 
 shortening an existing airport deadline. Unload retires queued/in-flight reads without
 publishing their data. Cooldowns/catalog/cache are in memory and reset on Core restart.
 
-HA stores the selected directory code, name, path and interval. No personal information
-or credentials are collected. Diagnostics allowlist airport code, effective polling
+HA stores the selected directory code, name, path and interval, not your coordinates
+or distance. Home coordinates are never sent to the provider or a geocoding service.
+The compact bundled [OurAirports](https://ourairports.com/data/) public-domain
+coordinate reference only suggests a default; the live directory controls coverage.
+Unknown coordinates do not remove an airport from manual selection. No credentials
+are collected. Diagnostics allowlist airport code, effective polling
 interval, update success, source/model type, fetch time and the lack of an observation
 timestamp; they do not include HTML, full configuration or checkpoint lists. Routine
 tests use invented HTML and loopback HTTP, never scraped live fixtures.

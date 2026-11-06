@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2b0 — Unreleased
+
+- Suggest the nearest unconfigured live-directory airport using HA’s location locally.
+- Keep the full editable airport selector and manual fallback; setup still requires submission.
+- Bundle a compact public-domain OurAirports coordinate reference; no home-coordinate transmission or storage.
+- Preserve manual overrides on provider errors and existing airport identities.
+
 ## 0.2.1b0 — Unreleased
 
 - Add native terminal/checkpoint-open binary sensors, including later discoveries.

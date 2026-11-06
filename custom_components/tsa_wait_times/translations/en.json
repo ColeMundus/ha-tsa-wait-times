@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect TSAWaitTimes.com airport",
-        "description": "Choose an airport from the live website directory. No account or API key required. Estimates are modeled, not measured queue times.",
+        "description": "The nearest unconfigured airport with known coordinates is preselected using Home Assistant’s location, calculated locally without sending your coordinates. Confirm it or choose any airport from the live directory. If no default is available, choose manually. No account or API key required. Estimates are modeled, not measured queue times.",
         "data": {
           "airport": "Airport",
           "scan_interval": "Polling interval (minutes)"
