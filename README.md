@@ -2,142 +2,66 @@
 
 <img src="custom_components/tsa_wait_times/brand/icon.png" alt="TSA seal; unofficial integration" width="96" height="96">
 
-[![CI workflow](https://img.shields.io/static/v1?label=CI&message=workflow&color=555)](https://github.com/ColeMundus/ha-tsa-wait-times/actions/workflows/ci.yml)
-[![HA tested 2026.10.0](https://img.shields.io/badge/HA-tested%202026.10.0-41BDF5)](https://github.com/ColeMundus/ha-tsa-wait-times/blob/main/pyproject.toml)
-[![Code license MIT](https://img.shields.io/badge/code%20license-MIT-blue?style=flat)](LICENSE)
-[![HACS private preview, not listed](https://img.shields.io/badge/HACS-private_preview-orange)](#installation)
+[![CI: workflow](docs/badges/ci.svg)](https://github.com/ColeMundus/ha-tsa-wait-times/actions/workflows/ci.yml)
+[![HA tested: 2026.10.0](docs/badges/compatibility.svg)](https://github.com/ColeMundus/ha-tsa-wait-times/actions/workflows/ci.yml)
+[![License: MIT](docs/badges/license.svg)](LICENSE)
+[![Distribution: private preview](docs/badges/distribution.svg)](#installation)
 
-Read airport security **modeled wait estimates** from [TSAWaitTimes.com](https://www.tsawaittimes.com/)
-without an account or API key. Select any airport in the website's live
-[airport directory](https://www.tsawaittimes.com/airports), including AUS, ATL and PDX.
-Add multiple airports as separate entries. This unofficial read-only integration is
-not a TSA, airport, or TayTech product. TSAWaitTimes.com is an independent TayTech
-website, not the US Transportation Security Administration.
+Airport security wait estimates and checkpoint status from
+[TSAWaitTimes.com](https://www.tsawaittimes.com/), with no account or API key.
+Choose from the site's live [airport directory](https://www.tsawaittimes.com/airports)
+and monitor multiple airports. This integration is independent of TSA and TayTech.
 
 ## Installation
 
-Requires Home Assistant **2026.10.0 or newer**; tested against 2026.10.0.
-This repository is private with no published release. It is not listed in HACS.
-For an authorized local preview, run `uv run --locked python scripts/package.py` and
-extract `dist/tsa-wait-times-0.2.2b0.zip` into your Home Assistant configuration directory.
-The resulting path must be `custom_components/tsa_wait_times/manifest.json`.
-Restart Home Assistant. Do not copy the development environment or tests.
+Requires **Home Assistant 2026.10.0+**. The repository is currently private and has
+no published release; it is not listed in HACS.
 
-After public distribution is approved, the intended HACS path is adding
-`https://github.com/ColeMundus/ha-tsa-wait-times` as a custom **Integration** repository.
-HACS downloads source; the manual ZIP is not configured as a HACS release asset.
+For a manual preview, build with `uv run --locked python scripts/package.py`, then
+extract `dist/tsa-wait-times-0.2.2b0.zip` into your HA configuration directory and
+restart HA. The installed path must be `custom_components/tsa_wait_times/manifest.json`.
+
+Once publicly available, add this repository to HACS as a custom **Integration**:
+`https://github.com/ColeMundus/ha-tsa-wait-times`.
 
 ## Setup
 
-In **Settings → Devices & services → Add integration**, select **TSA Wait Times**.
-The nearest unconfigured airport with known coordinates is preselected using Home
-Assistant’s configured location, calculated entirely locally. Confirm it or choose
-any airport from the full searchable live directory. If location or reference data
-is unavailable, choose manually; nothing is configured until you submit.
-Set a whole-minute polling interval (**5–1440 minutes**, default 5). No credentials,
-payment, browser extraction, or YAML are required. Repeat setup for another airport; duplicate codes are blocked.
-Use **Configure** on an existing entry to change its interval.
+1. Open **Settings → Devices & services → Add integration → TSA Wait Times**.
+2. Confirm the suggested nearby airport or choose another from the searchable list.
+3. Set the polling interval (**5–1440 minutes**, default **5**) and submit.
 
-Only linked airport-detail pages in the directory are offered. Autocomplete's larger
-location list is not used because not every result has a working detail page. The
-catalog is fetched on demand and cached for 24 hours in memory; it is not a bundled
-airport list. Only selected airports are polled—there is no fetch-all operation.
-Directory codes and URLs are preserved exactly, including unusual provider codes.
+The default is calculated locally from HA's location; your coordinates are never
+sent to the website or a geocoding service. Missing coordinates leave manual selection
+available. Add another entry for another airport; **Configure** changes polling.
 
 ## Entities
 
-Each airport has a **TSA Wait Times CODE** service device with airport-wide entities
-and an open-status binary sensor for each listed terminal/checkpoint:
+Each airport gets a device containing:
 
-| Example default ID | Meaning |
+| Entity | Information |
 | --- | --- |
-| `sensor.tsa_wait_times_aus_estimated_wait` | Current airport-wide modeled estimate, minutes |
-| `binary_sensor.tsa_wait_times_aus_precheck_available` | Website reports TSA PreCheck available (on) or unavailable (off) |
-| `binary_sensor.tsa_wait_times_aus_terminal_main_checkpoint_1_open` | Terminal MAIN Checkpoint 1 is Open (on) or Closed (off) |
+| Estimated wait | Airport-wide estimate in minutes, including seconds; hourly estimates in attributes |
+| TSA PreCheck available | Whether the website reports PreCheck availability; checkpoint list in attributes |
+| Checkpoint open | One binary sensor per terminal/checkpoint: **on = Open**, **off = Closed** |
 
-The estimate uses the displayed minutes **and seconds**, without substituting the
-rounded hourly chart. Its `hourly_estimates` attribute contains only rows supplied by
-the page, with original local `time_slot` labels and numeric minutes. Missing hours
-are not filled in or treated as zero. These are website model estimates, not a
-forecast generated by this integration; no timezone/date interpretation is added.
+New checkpoints appear automatically. Missing or unknown values become **unavailable**,
+not zero or closed. Checkpoint identities use exact source labels; custom names and
+IDs survive reload. All entities share one airport refresh.
 
-Checkpoint sensors appear automatically at setup and when newly listed in later
-refreshes. Open is **on**, Closed is **off**; an unknown or missing checkpoint is
-**unavailable**, not closed. Temporary omissions do not delete registry entries.
-Identity uses the airport and exact terminal/checkpoint labels, not row order; a
-source label change is a new identity. Customized names and IDs survive reload.
-All entities share one airport refresh—checkpoint sensors add no HTTP requests.
+## Data and privacy
 
-PreCheck's existing `checkpoints` attribute is retained. **The source does not provide
-per-checkpoint wait durations**; PreCheck availability does not establish that every
-listed checkpoint is open. Missing/non-numeric current waits or unknown PreCheck
-availability make the respective entity **unavailable**, never zero/off. A genuine
-displayed zero remains zero. Provider/connection errors make all airport entities
-unavailable until a valid refresh.
+- Waits are **modeled estimates**, not guaranteed live queue measurements. The source
+  does not provide checkpoint-specific wait durations or an observation timestamp.
+  `fetched_at` means retrieval time, not measurement time.
+- Only selected airports are polled. The directory is cached, requests are paced,
+  and rate-limit responses trigger backoff. Website markup and coverage can change.
+- HA stores the selected airport and interval, not your home coordinates. The local
+  airport-coordinate reference comes from public-domain [OurAirports data](https://ourairports.com/data/).
+- Website access is subject to [TSAWaitTimes.com's terms](https://www.tsawaittimes.com/terms).
+  Code is MIT licensed; website data and the TSA seal are not relicensed by this project.
+  See [LICENSE](LICENSE) for artwork provenance and insignia restrictions. No endorsement is implied.
 
-`source_url` links the estimate to its airport page. `fetched_at` records successful
-HTML retrieval/parsing, **not a source observation or measurement timestamp**. The
-website supplies no observation timestamp; a fresh HTTP response cannot establish
-fresh underlying data. A stale but valid page cannot be detected. Consult the airport
-and airline and allow appropriate arrival time; these estimates are not guarantees.
+If setup or updates fail, check the airport page and retry after the polling/backoff
+interval. Persistent failures may indicate changed site markup; report sanitized logs.
 
-## Polling, privacy and source limits
-
-Requests use anonymous public HTML from TSAWaitTimes.com, not a supported developer
-API. Markup and airport coverage can change. Airport identity is checked before
-accepting data; redirects/homepage responses are rejected rather than misattributed.
-There is no submission/reporting POST or other provider write operation.
-
-A shared client enforces **five seconds between all request starts**, respecting the
-site's robots crawl delay, plus the configured per-airport interval of at least five
-minutes. Setup, manual refresh and reload share the same cache and request deadlines.
-Successful cached data may be reused within the floor. Failed reads retain the floor;
-HTTP 429 adds a shared cooldown with bounded `Retry-After` (60–3600 seconds), without
-shortening an existing airport deadline. Unload retires queued/in-flight reads without
-publishing their data. Cooldowns/catalog/cache are in memory and reset on Core restart.
-
-HA stores the selected directory code, name, path and interval, not your coordinates
-or distance. Home coordinates are never sent to the provider or a geocoding service.
-The compact bundled [OurAirports](https://ourairports.com/data/) public-domain
-coordinate reference only suggests a default; the live directory controls coverage.
-Unknown coordinates do not remove an airport from manual selection. No credentials
-are collected. Diagnostics allowlist airport code, effective polling
-interval, update success, source/model type, fetch time and the lack of an observation
-timestamp; they do not include HTML, full configuration or checkpoint lists. Routine
-tests use invented HTML and loopback HTTP, never scraped live fixtures.
-
-The site's [terms](https://www.tsawaittimes.com/terms) describe personal,
-noncommercial/educational use; anonymous access is not blanket permission for
-commercial reuse, redistribution, or guaranteed API access. Review applicable terms
-before your use. This integration's code license does not license website data.
-
-## Upgrade from 0.1.0b0
-
-The old PDX-only `flypdx.com` provider was the wrong source. Version 0.2.0b0 replaces
-it with TSAWaitTimes.com for all directory airports. Existing version-1 PDX entries
-migrate to the site's literal PDX detail URL, preserving entry ID, unique ID, title,
-options and preferences. Legacy intervals below five minutes remain stored but have
-an effective five-minute floor; the options form offers only supported values.
-
-The old four checkpoint-duration sensors and two closure sensors are **not equivalent**
-to the new airport model and must not be silently repurposed. They stop being provided;
-registry records are not automatically deleted. Review automations/dashboards using
-old entities, move them deliberately to the new semantics, and remove unused legacy
-entities through Home Assistant when appropriate. New entity IDs use
-`PDX_estimated_wait` and `PDX_precheck_available` unique-ID suffixes.
-
-## Troubleshooting and distribution
-
-If setup fails, wait five minutes (up to an hour after rate limiting), then check the
-website and retry. Reloading/reopening does not bypass shared in-memory cooldowns.
-An unavailable entity can also indicate missing fields or changed site markup.
-Remove entries through Devices & services; uninstall files through your install method.
-
-Code is MIT licensed. The bundled TSA seal is separate artwork used by user request;
-see [LICENSE](LICENSE) for provenance and insignia/trademark limits. It does not imply
-TSA endorsement or that TSA operates the data source. Public distribution still needs
-applicable branding permission, independent review, public HACS validation and installed
-testing. The repository-relative README icon works while the repository is private.
-CI links to the workflow, not a fabricated passing status.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md) and [SECURITY.md](SECURITY.md).
+[Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)

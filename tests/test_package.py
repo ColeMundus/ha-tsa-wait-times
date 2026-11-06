@@ -1,13 +1,11 @@
 """Packaging exercises real files and substantive rejection paths."""
 
 import json
-import re
 import shutil
 import zipfile
 from html.parser import HTMLParser
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import pytest
 from PIL import Image
@@ -102,15 +100,4 @@ def test_readme_branding():
     # not an unauthenticated raw.githubusercontent.com URL.
     assert sources == ["custom_components/tsa_wait_times/brand/icon.png"]
     assert (root / sources[0]).is_file()
-    badges = re.findall(r"\[!\[([^\]]+)\]\(([^)]+)\)\]\(([^)]+)\)", readme)
-    assert len(badges) == 4
-    assert all(urlsplit(image).scheme == "https" for _, image, _ in badges)
-    assert any(
-        label == "CI workflow" and target.endswith("/ci.yml")
-        for label, _, target in badges
-    )
-    assert any(
-        label == "Code license MIT" and target == "LICENSE"
-        for label, _, target in badges
-    )
-    assert any("not listed" in label for label, _, _ in badges)
+    # Badge rendering and link validation live in test_readme_badges.py.

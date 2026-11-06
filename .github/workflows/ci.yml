@@ -24,6 +24,12 @@ jobs:
       - run: uv run --locked pytest --cov=custom_components/tsa_wait_times --cov-report=term-missing --cov-fail-under=90
       - run: uv run --locked python scripts/package.py
       - run: git diff --check
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tsa-wait-times-manual-install
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
   hassfest:
     runs-on: ubuntu-latest
     timeout-minutes: 15
