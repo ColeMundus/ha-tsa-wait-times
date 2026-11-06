@@ -38,12 +38,18 @@ def test_package(tree, tmp_path):
             assert icon.size == (256, 256)
             icon.verify()
         assert bundle.read(icon_path) == (tree / icon_path).read_bytes()
-        assert "https://www.tsa.gov/" in bundle.read("LICENSE").decode()
+        assert (
+            "https://www.tsa.gov/"
+            in bundle.read("custom_components/tsa_wait_times/NOTICE").decode()
+        )
         assert bundle.testzip() is None
     assert archive.with_suffix(".zip.sha256").exists()
     with zipfile.ZipFile(archive) as bundle:
         assert "custom_components/tsa_wait_times/airports.py" in bundle.namelist()
-        assert "OurAirports" in bundle.read("LICENSE").decode()
+        assert (
+            "OurAirports"
+            in bundle.read("custom_components/tsa_wait_times/NOTICE").decode()
+        )
 
 
 @pytest.mark.parametrize(

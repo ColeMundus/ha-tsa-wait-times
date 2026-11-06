@@ -1,4 +1,5 @@
 {
   "name": "TSA Wait Times",
+  "country": "US",
   "homeassistant": "2026.10.0"
 }

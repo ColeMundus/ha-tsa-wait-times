@@ -57,9 +57,10 @@ IDs survive reload. All entities share one airport refresh.
   and rate-limit responses trigger backoff. Website markup and coverage can change.
 - HA stores the selected airport and interval, not your home coordinates. The local
   airport-coordinate reference comes from public-domain [OurAirports data](https://ourairports.com/data/).
-- Website access is subject to [TSAWaitTimes.com's terms](https://www.tsawaittimes.com/terms).
+- The website's [terms](https://www.tsawaittimes.com/terms) permit personal,
+  noncommercial and educational use; this project does not grant commercial data rights.
   Code is MIT licensed; website data and the TSA seal are not relicensed by this project.
-  See [LICENSE](LICENSE) for artwork provenance and insignia restrictions. No endorsement is implied.
+  See [notices](custom_components/tsa_wait_times/NOTICE) for artwork provenance and insignia restrictions. No endorsement is implied.
 
 If setup or updates fail, check the airport page and retry after the polling/backoff
 interval. Persistent failures may indicate changed site markup; report sanitized logs.

@@ -13,6 +13,7 @@ from PIL import Image
 
 REQUIRED = {
     "__init__.py",
+    "NOTICE",
     "airports.py",
     "binary_sensor.py",
     "brand/icon.png",
