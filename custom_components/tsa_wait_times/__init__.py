@@ -1,4 +1,4 @@
-"""TSA Wait Times integration."""
+"""TSAWaitTimes.com integration lifecycle and shared polling."""
 
 import logging
 import time
@@ -10,15 +10,22 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .client import Feed, FeedError, Snapshot
-from .const import CONF_INTERVAL, DEFAULT_INTERVAL, DOMAIN
+from .client import PATH, Airport, Feed, FeedError, Snapshot
+from .const import (
+    CONF_AIRPORT,
+    CONF_INTERVAL,
+    CONF_NAME,
+    CONF_PATH,
+    DEFAULT_INTERVAL,
+    DOMAIN,
+)
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 type TSAConfigEntry = ConfigEntry[WaitCoordinator]
 
 
 def get_feed(hass: HomeAssistant) -> Feed:
-    """Retain only public source pacing/cache across entry lifetimes."""
+    """Share public catalog, cache and pacing across all entry/flow lifetimes."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = Feed(async_get_clientsession(hass))
     feed: Feed = hass.data[DOMAIN]
@@ -26,32 +33,35 @@ def get_feed(hass: HomeAssistant) -> Feed:
 
 
 class WaitCoordinator(DataUpdateCoordinator[Snapshot]):
-    """One source read for all six entities."""
+    """One modeled estimate snapshot per airport."""
 
     def __init__(self, hass: HomeAssistant, entry: TSAConfigEntry) -> None:
+        self.airport = Airport(
+            entry.data[CONF_AIRPORT], entry.data[CONF_NAME], entry.data[CONF_PATH]
+        )
+        self.minutes = max(
+            5,
+            entry.options.get(
+                CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+            ),
+        )
+        self.active = True
         super().__init__(
             hass,
             logging.getLogger(__name__),
             name=DOMAIN,
             config_entry=entry,
-            update_interval=timedelta(
-                minutes=entry.options.get(
-                    CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL)
-                )
-            ),
+            update_interval=timedelta(minutes=self.minutes),
         )
         self.feed = get_feed(hass)
 
     @callback
     def _schedule_refresh(self) -> None:
-        """Clamp Core's rounded/jittered timer to the retained source deadline."""
+        """Clamp Core 2026.10's rounded/jittered timer to source deadlines."""
         if self._update_interval_seconds is not None and not (
             self.config_entry and self.config_entry.pref_disable_polling
         ):
-            # Core 2026.10 schedules at int(loop.time()) + jitter + interval.
-            # Supply its one-shot interval override rather than owning another
-            # timer/task: Core retains unload/shutdown cancellation and dispatch.
-            remaining = self.feed.not_before - time.monotonic()
+            remaining = self.feed.deadline(self.airport.code) - time.monotonic()
             now = self.hass.loop.time()
             floor_interval = remaining + (now - int(now)) - self._microsecond
             self._retry_after = max(
@@ -64,13 +74,18 @@ class WaitCoordinator(DataUpdateCoordinator[Snapshot]):
 
     async def _async_update_data(self) -> Snapshot:
         try:
-            return await self.feed.fetch()
+            return await self.feed.fetch(
+                self.airport, self.minutes, active=lambda: self.active
+            )
         except FeedError as err:
             raise UpdateFailed(str(err)) from None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TSAConfigEntry) -> bool:
-    """Set up using the HA-owned HTTP session."""
+    """Set up with the HA-owned HTTP session."""
+    match = PATH.fullmatch(entry.data.get(CONF_PATH, ""))
+    if not match or match[1] != entry.data.get(CONF_AIRPORT):
+        return False
     coordinator = WaitCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
@@ -80,14 +95,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: TSAConfigEntry) -> bool:
 
 
 async def async_options_updated(hass: HomeAssistant, entry: TSAConfigEntry) -> None:
-    """Apply changed options through Core's normal reload lifecycle."""
-    effective = entry.options.get(
-        CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+    """Only effective option changes reload; data writes must not loop."""
+    effective = max(
+        5,
+        entry.options.get(
+            CONF_INTERVAL, entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+        ),
     )
-    if entry.runtime_data.update_interval != timedelta(minutes=effective):
+    if entry.runtime_data.minutes != effective:
         await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TSAConfigEntry) -> bool:
-    """Unload platforms (Core owns coordinator timer cancellation)."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    """Retire in-flight/queued refreshes; Core cancels its owned timer."""
+    coordinator = entry.runtime_data
+    coordinator.active = False
+    try:
+        unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    except BaseException:
+        coordinator.active = True
+        raise
+    if not unloaded:
+        coordinator.active = True
+    return unloaded
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: TSAConfigEntry) -> bool:
+    """Replace the legacy PDX provider without changing config-entry identity."""
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        if entry.data.get(CONF_AIRPORT) != "PDX":
+            return False
+        data = {
+            **entry.data,
+            CONF_PATH: "/security-wait-times/PDX/Portland-International",
+            CONF_NAME: "Portland International",
+        }
+        # Preserve preferences and entry unique_id; enforce the new source floor
+        # in runtime instead of rewriting a user's legacy interval preference.
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
+    return True

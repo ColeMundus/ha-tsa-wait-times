@@ -15,9 +15,10 @@ git diff --check
 
 Tests use actual HA flows, registries and the HA-owned aiohttp session against a
 loopback server. External sockets remain blocked. Keep fixtures synthetic; do not
-check in live captures, secrets or local agent instructions. New airport support
-needs verified first-party access, field units, closure semantics and tests—not an
-unverified national API assumption.
+check in live captures, secrets or local agent instructions. Airport choices come
+from TSAWaitTimes.com's linked directory. Parser changes need verified displayed
+units, selected-airport identity checks and missing-value regressions; do not add
+unverified API or autocomplete locations as working airport coverage.
 
 CI runs lint, typing, tests, packaging, hassfest and (only for public repositories)
 HACS validation. A private HACS skip is not validation success. The archive script

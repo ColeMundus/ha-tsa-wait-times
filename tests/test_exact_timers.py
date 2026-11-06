@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from conftest import entry_data
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -20,13 +21,14 @@ async def advance(hass, freezer, seconds):
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def setup(hass, http, payload, freezer):
+async def setup(hass, http, payload, freezer, seeded):
     freezer.move_to("2026-11-05T12:00:00.750000+00:00")
     http.add(payload)
     entry = MockConfigEntry(
         domain="tsa_wait_times",
         unique_id="PDX",
-        data={"airport": "PDX", "scan_interval": 1},
+        version=2,
+        data=entry_data(),
     )
     entry.add_to_hass(hass)
     with patch("homeassistant.helpers.update_coordinator.randint", return_value=50000):
@@ -37,16 +39,16 @@ async def setup(hass, http, payload, freezer):
 
 
 @pytest.mark.parametrize("manual", [False, True])
-async def test_fractional_native_deadline(hass, http, payload, freezer, manual):
-    entry = await setup(hass, http, payload, freezer)
-    floor = get_feed(hass).not_before
+async def test_fractional_native_deadline(hass, http, payload, freezer, seeded, manual):
+    entry = await setup(hass, http, payload, freezer, seeded)
+    floor = get_feed(hass).deadline("PDX")
     if manual:
         # A real manual coordinator refresh must not bypass the source floor.
         await entry.runtime_data.async_request_refresh()
         await hass.async_block_till_done(wait_background_tasks=True)
         assert len(http.requests) == 1
-        assert get_feed(hass).not_before == floor
-    await advance(hass, freezer, 59.3)
+        assert get_feed(hass).deadline("PDX") == floor
+    await advance(hass, freezer, 299.3)
     assert len(http.requests) == 1
     await advance(hass, freezer, 0.699)
     assert len(http.requests) == 1
@@ -55,19 +57,21 @@ async def test_fractional_native_deadline(hass, http, payload, freezer, manual):
     assert len(http.requests) == 2
     # Prove subsequent intervals do not silently double either.
     http.add(payload)
-    await advance(hass, freezer, 60)
+    await advance(hass, freezer, 300)
     assert len(http.requests) == 3
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize("rate_limited", [False, True])
-async def test_unload_cancels_clamped_timer(hass, http, payload, freezer, rate_limited):
-    entry = await setup(hass, http, payload, freezer)
+async def test_unload_cancels_clamped_timer(
+    hass, http, payload, freezer, seeded, rate_limited
+):
+    entry = await setup(hass, http, payload, freezer, seeded)
     if rate_limited:
-        http.add({}, status=429, headers={"Retry-After": "3600"})
-        await advance(hass, freezer, 60)
+        http.add("", status=429, headers={"Retry-After": "3600"})
+        await advance(hass, freezer, 300)
     else:
-        await advance(hass, freezer, 59.3)
+        await advance(hass, freezer, 299.3)
     count = len(http.requests)
     coordinator = entry.runtime_data
     assert coordinator._unsub_refresh is not None
@@ -79,22 +83,50 @@ async def test_unload_cancels_clamped_timer(hass, http, payload, freezer, rate_l
 
 
 async def test_retry_after_exact_deadline_and_manual_floor(
-    hass, http, payload, freezer
+    hass, http, payload, freezer, seeded
 ):
-    entry = await setup(hass, http, payload, freezer)
-    http.add({}, status=429, headers={"Retry-After": "120"})
-    await advance(hass, freezer, 60)
+    entry = await setup(hass, http, payload, freezer, seeded)
+    http.add("", status=429, headers={"Retry-After": "600"})
+    await advance(hass, freezer, 300)
     assert len(http.requests) == 2
     assert not entry.runtime_data.last_update_success
-    floor = get_feed(hass).not_before
+    floor = get_feed(hass).deadline("PDX")
     await entry.runtime_data.async_request_refresh()
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(http.requests) == 2
-    assert get_feed(hass).not_before == floor
-    await advance(hass, freezer, 119.999)
+    assert get_feed(hass).deadline("PDX") == floor
+    await advance(hass, freezer, 599.999)
     assert len(http.requests) == 2
     http.add(payload)
     await advance(hass, freezer, 0.001)
     assert len(http.requests) == 3
     assert entry.runtime_data.last_update_success
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_options_reload_reduction_retains_exact_floor(
+    hass, http, payload, freezer, seeded
+):
+    entry = await setup(hass, http, payload, freezer, seeded)
+    # Increase to ten minutes, then reduce after an elapsed minute. Reload uses
+    # cached data and must not erase the already-established ten-minute floor.
+    form = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        form["flow_id"], {"scan_interval": 10}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(http.requests) == 1
+    await advance(hass, freezer, 60)
+    form = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        form["flow_id"], {"scan_interval": 5}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.runtime_data.minutes == 5
+    assert len(http.requests) == 1
+    await advance(hass, freezer, 539.999)
+    assert len(http.requests) == 1
+    http.add(payload)
+    await advance(hass, freezer, 0.001)
+    assert len(http.requests) == 2
     assert await hass.config_entries.async_unload(entry.entry_id)

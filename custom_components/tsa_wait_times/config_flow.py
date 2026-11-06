@@ -1,4 +1,4 @@
-"""Single-airport setup and polling options."""
+"""Live directory airport setup and conservative polling options."""
 
 from typing import Any
 
@@ -8,38 +8,53 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from . import get_feed
-from .client import FeedError
-from .const import CONF_AIRPORT, CONF_INTERVAL, DEFAULT_INTERVAL, DOMAIN
+from .client import Airport, FeedError
+from .const import (
+    CONF_AIRPORT,
+    CONF_INTERVAL,
+    CONF_NAME,
+    CONF_PATH,
+    DEFAULT_INTERVAL,
+    DOMAIN,
+)
 
 
 def interval(value: Any) -> int:
-    """Accept whole minutes, never booleans or numeric strings."""
+    """Accept whole minutes, never booleans, strings or sub-five-minute values."""
     if (
         isinstance(value, bool)
         or not isinstance(value, (int, float))
-        or not 1 <= value <= 1440
+        or not 5 <= value <= 1440
         or int(value) != value
     ):
-        raise vol.Invalid("Use whole minutes from 1 to 1440")
+        raise vol.Invalid("Use whole minutes from 5 to 1440")
     return int(value)
 
 
 class MinuteSelector(selector.NumberSelector):
-    """Serialize as a native number selector with strict minute validation."""
+    """Native numeric selector with strict minute validation."""
 
     def __call__(self, data: Any) -> float:
         return interval(data)
 
 
-def schema(default: int, *, airport: bool = False) -> vol.Schema:
+def schema(default: int, airports: dict[str, Airport] | None = None) -> vol.Schema:
     fields: dict[Any, Any] = {}
-    if airport:
-        fields[vol.Required(CONF_AIRPORT, default="PDX")] = selector.SelectSelector(
-            selector.SelectSelectorConfig(options=["PDX"])
+    if airports is not None:
+        fields[vol.Required(CONF_AIRPORT)] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    selector.SelectOptionDict(
+                        value=code, label=f"{code} — {airport.name}"
+                    )
+                    for code, airport in sorted(airports.items())
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
         )
-    fields[vol.Required(CONF_INTERVAL, default=default)] = MinuteSelector(
+    fields[vol.Required(CONF_INTERVAL, default=max(5, default))] = MinuteSelector(
         selector.NumberSelectorConfig(
-            min=1,
+            min=5,
             max=1440,
             step=1,
             mode=selector.NumberSelectorMode.BOX,
@@ -50,9 +65,9 @@ def schema(default: int, *, airport: bool = False) -> vol.Schema:
 
 
 class TSAFlow(ConfigFlow, domain=DOMAIN):
-    """Validate the anonymous feed before creating one PDX entry."""
+    """One validated entry per exact live-directory code."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -63,49 +78,63 @@ class TSAFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         errors = {}
+        try:
+            airports = await get_feed(self.hass).airports()
+        except FeedError:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({}),
+                errors={"base": "cannot_connect"},
+            )
         if user_input is not None:
             try:
-                user_input = schema(DEFAULT_INTERVAL, airport=True)(user_input)
+                user_input = schema(DEFAULT_INTERVAL, airports)(user_input)
             except vol.Invalid:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=schema(DEFAULT_INTERVAL, airport=True),
-                    errors={"base": "invalid_input"},
-                )
-            await self.async_set_unique_id("PDX")
-            self._abort_if_unique_id_configured()
-            try:
-                await get_feed(self.hass).fetch()
-            except FeedError:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "invalid_input"
             else:
-                return self.async_create_entry(
-                    title="TSA Wait Times PDX", data=user_input
-                )
+                code = user_input[CONF_AIRPORT]
+                await self.async_set_unique_id(code)
+                self._abort_if_unique_id_configured()
+                try:
+                    await get_feed(self.hass).fetch(
+                        airports[code], user_input[CONF_INTERVAL]
+                    )
+                except FeedError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    airport = airports[code]
+                    return self.async_create_entry(
+                        title=f"TSA Wait Times {code}",
+                        data={
+                            **user_input,
+                            CONF_PATH: airport.path,
+                            CONF_NAME: airport.name,
+                        },
+                    )
         return self.async_show_form(
             step_id="user",
-            data_schema=schema(DEFAULT_INTERVAL, airport=True),
+            data_schema=schema(DEFAULT_INTERVAL, airports),
             errors=errors,
         )
 
 
 class TSAOptions(OptionsFlow):
-    """Change polling without changing source identity."""
+    """Change polling without changing selected airport identity."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        if user_input is not None:
-            try:
-                validated: dict[str, Any] = schema(DEFAULT_INTERVAL)(user_input)
-            except vol.Invalid:
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=schema(DEFAULT_INTERVAL),
-                    errors={"base": "invalid_input"},
-                )
-            return self.async_create_entry(title="", data=validated)
         default = self.config_entry.options.get(
             CONF_INTERVAL, self.config_entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL)
         )
+        if user_input is not None:
+            try:
+                validated: dict[str, Any] = schema(default)(user_input)
+            except vol.Invalid:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=schema(default),
+                    errors={"base": "invalid_input"},
+                )
+            return self.async_create_entry(title="", data=validated)
         return self.async_show_form(step_id="init", data_schema=schema(default))

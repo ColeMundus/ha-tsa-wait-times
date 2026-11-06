@@ -1,4 +1,6 @@
-"""Checkpoint closure indicators."""
+"""TSA PreCheck availability and the website's checkpoint status list."""
+
+from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
@@ -12,14 +14,28 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: TSAConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     async_add_entities(
-        ClosedSensor(entry.runtime_data, side, f"{side} checkpoint closed")
-        for side in ("North", "South")
+        [
+            PrecheckSensor(
+                entry.runtime_data, "precheck_available", "TSA PreCheck available"
+            )
+        ]
     )
 
 
-class ClosedSensor(TSAEntity, BinarySensorEntity):
-    """On means closed as reported by the airport."""
+class PrecheckSensor(TSAEntity, BinarySensorEntity):
+    """On means the website reports PreCheck available, not a measured wait."""
 
     @property
-    def is_on(self) -> bool:
-        return self.coordinator.data.closed[self.key]
+    def available(self) -> bool:
+        return super().available and self.coordinator.data.precheck is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        return self.coordinator.data.precheck
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {
+            "checkpoints": list(self.coordinator.data.checkpoints),
+            "fetched_at": self.coordinator.data.fetched_at.isoformat(),
+        }

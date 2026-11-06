@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect airport wait times",
-        "description": "Read public airport estimates. Only Portland (PDX) is supported.",
+        "title": "Connect TSAWaitTimes.com airport",
+        "description": "Choose an airport from the live website directory. No account or API key required. Estimates are modeled, not measured queue times.",
         "data": {
           "airport": "Airport",
           "scan_interval": "Polling interval (minutes)"
@@ -11,11 +11,11 @@
       }
     },
     "error": {
-      "cannot_connect": "Unable to read the airport feed. Wait at least one minute before retrying.",
-      "invalid_input": "Select PDX and a whole-minute polling interval from 1 to 1440."
+      "cannot_connect": "Unable to read TSAWaitTimes.com. Wait at least five minutes before retrying (up to one hour after rate limiting).",
+      "invalid_input": "Select a directory airport and whole minutes from 5 to 1440."
     },
     "abort": {
-      "already_configured": "PDX is already configured."
+      "already_configured": "This airport is already configured."
     }
   },
   "options": {
@@ -28,7 +28,7 @@
       }
     },
     "error": {
-      "invalid_input": "Use a whole-minute polling interval from 1 to 1440."
+      "invalid_input": "Use whole minutes from 5 to 1440."
     }
   }
 }
