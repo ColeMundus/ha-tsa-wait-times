@@ -15,11 +15,11 @@ and monitor multiple airports. This integration is independent of TSA and TayTec
 ## Installation
 
 Requires **Home Assistant 2026.10.0+**. Available as a HACS custom repository;
-not yet included in HACS's default catalog. [Preview release: 0.2.2b0](https://github.com/ColeMundus/ha-tsa-wait-times/releases/tag/v0.2.2b0).
+not yet included in HACS's default catalog. [Stable release: 0.2.2](https://github.com/ColeMundus/ha-tsa-wait-times/releases/tag/v0.2.2).
 
 1. In HACS, open **Custom repositories** and add
    `https://github.com/ColeMundus/ha-tsa-wait-times` with category **Integration**.
-2. Download **TSA Wait Times** (enable prereleases to select the preview), then restart Home Assistant.
+2. Download **TSA Wait Times**, then restart Home Assistant.
 3. Continue with setup below.
 
 For manual installation, download the ZIP from the release and extract it into your

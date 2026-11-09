@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.2.2b0 — Unreleased
+## 0.2.2 — 2026-11-09
+
+- Publish the first stable release, available in HACS without enabling beta versions.
+- Retain the features and runtime behavior of the 0.2.2b0 preview.
+
+## 0.2.2b0 — 2026-11-06
 
 - Suggest the nearest unconfigured live-directory airport using HA’s location locally.
 - Keep the full editable airport selector and manual fallback; setup still requires submission.
@@ -29,5 +34,3 @@
 ## 0.1.0b0 — Unreleased, superseded
 
 - Initial PDX-only airport-feed preview; replaced because it used the wrong source.
-
-No public release has been published.
