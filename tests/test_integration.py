@@ -332,11 +332,13 @@ async def test_directory_failure_retry(hass, http):
 async def test_transport_sanitized(hass, http, airport, caplog):
     caplog.set_level(logging.DEBUG)
     feed = Feed(async_get_clientsession(hass))
-    with patch.object(
-        feed.session, "get", side_effect=TimeoutError("URL_SECRET_CANARY")
+    with (
+        patch.object(
+            feed.session, "get", side_effect=TimeoutError("URL_SECRET_CANARY")
+        ),
+        pytest.raises(FeedError, match="Unable to read"),
     ):
-        with pytest.raises(FeedError, match="Unable to read"):
-            await feed.fetch(airport)
+        await feed.fetch(airport)
     assert "URL_SECRET_CANARY" not in caplog.text
 
 

@@ -91,11 +91,14 @@ async def test_retire_during_pacing_never_starts_http(hass, http, airport):
     async def sleep(delay):
         active[0] = False
 
-    with patch(
-        "custom_components.tsa_wait_times.client.asyncio", SimpleNamespace(sleep=sleep)
+    with (
+        patch(
+            "custom_components.tsa_wait_times.client.asyncio",
+            SimpleNamespace(sleep=sleep),
+        ),
+        pytest.raises(FeedError, match="retired"),
     ):
-        with pytest.raises(FeedError, match="retired"):
-            await feed.fetch(airport, active=lambda: active[0])
+        await feed.fetch(airport, active=lambda: active[0])
     assert http.requests == []
 
 
