@@ -68,3 +68,5 @@ If setup or updates fail, check the airport page and retry after the polling/bac
 interval. Persistent failures may indicate changed site markup; report sanitized logs.
 
 [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
+
+<!-- Temporary CI measurement full-01. This PR will be closed unmerged. -->
