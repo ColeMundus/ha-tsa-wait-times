@@ -15,8 +15,24 @@ from custom_components.tsa_wait_times import async_unload_entry
 from custom_components.tsa_wait_times.client import Feed, FeedError
 
 
-async def test_composed_directory_flow_setup(hass, http):
+async def test_composed_directory_flow_setup(hass, http, monkeypatch):
     """Actual directory HTTP → native selection → detail HTTP → real entities."""
+    now = 100.0
+    waits = []
+
+    async def sleep(delay):
+        nonlocal now
+        waits.append(delay)
+        now += delay
+
+    monkeypatch.setattr(
+        "custom_components.tsa_wait_times.client.time",
+        SimpleNamespace(monotonic=lambda: now),
+    )
+    monkeypatch.setattr(
+        "custom_components.tsa_wait_times.client.asyncio",
+        SimpleNamespace(sleep=sleep, Lock=asyncio.Lock),
+    )
     http.add(CATALOG)
     http.add(page("AUS"))
     form = await hass.config_entries.flow.async_init(
@@ -28,6 +44,7 @@ async def test_composed_directory_flow_setup(hass, http):
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     assert result["result"].version == 2
+    assert waits == [5.0]
     assert http.requests == ["/airports", entry_data("AUS")["path"]]
     assert hass.states.get("sensor.tsa_wait_times_aus_estimated_wait").state == "19.7"
     assert (
