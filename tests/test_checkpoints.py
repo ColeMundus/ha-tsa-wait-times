@@ -130,7 +130,7 @@ async def test_checkpoint_identity_customization_reload(hass, http, seeded):
 async def test_later_discovery_missing_unknown_failure_and_recovery(hass, http, seeded):
     entry = await setup_airport(hass, http, ROWS[:1])
     first = checkpoints(hass, entry)[0]
-    await refresh(hass, http, seeded, entry, ROWS + [ROWS[0]])
+    await refresh(hass, http, seeded, entry, [*ROWS, ROWS[0]])
     entities = checkpoints(hass, entry)
     assert len(entities) == 3  # Duplicate rows do not create duplicate entities.
     identities = {e.unique_id: e.id for e in entities}
