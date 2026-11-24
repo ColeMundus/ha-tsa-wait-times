@@ -77,7 +77,7 @@ async def http(aiohttp_server, socket_enabled):
     app.router.add_get("/{tail:.*}", handler)
     server = await aiohttp_server(app, host="127.0.0.1", access_log=None)
 
-    def add(payload="", status=200, headers=None, blocked=False):
+    def add(payload="", status=200, headers=None, *, blocked=False):
         replies.append((payload, status, headers, blocked))
 
     with patch(
