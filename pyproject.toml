@@ -26,7 +26,7 @@ pythonpath = ["."]
 target-version = "py314"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "ASYNC"]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "PLW"]
 
 [tool.mypy]
 python_version = "3.14"
